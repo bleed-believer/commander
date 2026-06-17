@@ -1,7 +1,7 @@
 import type { CommandRouterOptions } from './interfaces/index.js';
-import type { CommandResult } from '@/command';
+import type { CommandResult } from '@/command/index.js';
 
-import { parseLiteralNames } from '@/argv';
+import { parseLiteralNames } from '@/argv/index.js';
 
 /**
  * Dispatches argv to an ordered list of commands or nested routers,

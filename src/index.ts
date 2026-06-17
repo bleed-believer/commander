@@ -1,3 +1,3 @@
-export * from '@/command';
-export * from '@/commander';
-export * from '@/command-router';
+export * from '@/command/index.js';
+export * from '@/commander/index.js';
+export * from '@/command-router/index.js';

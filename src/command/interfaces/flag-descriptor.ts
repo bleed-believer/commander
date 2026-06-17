@@ -1,4 +1,4 @@
-import type { FlagOptions } from '@/argv';
+import type { FlagOptions } from '@/argv/index.js';
 
 /**
  * Extends {@link FlagOptions} with an optional human-readable description,

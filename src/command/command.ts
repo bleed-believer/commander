@@ -1,6 +1,6 @@
 import type { CommandContext, CommandOptions, CommandResult, FlagDescriptor } from './interfaces/index.js';
 
-import { Argv, StaticMismatchError, PositionalMismatchError } from '@/argv';
+import { Argv, StaticMismatchError, PositionalMismatchError } from '@/argv/index.js';
 
 /**
  * Represents a single CLI command with a typed positionals template,

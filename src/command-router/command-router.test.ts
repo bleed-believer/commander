@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 
 import { CommandRouter } from './command-router.js';
-import { Command } from '@/command';
+import { Command } from '@/command/index.js';
 
 describe('CommandRouter', () => {
     function buildRouter() {

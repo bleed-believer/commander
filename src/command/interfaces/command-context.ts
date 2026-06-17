@@ -1,5 +1,5 @@
 import type { FlagDescriptor } from './flag-descriptor.js';
-import type { Argv } from '@/argv';
+import type { Argv } from '@/argv/index.js';
 
 /**
  * The fully-typed result of parsing `process.argv` against a command's
