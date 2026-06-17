@@ -1,24 +1,39 @@
 {
   "name": "@bleed-believer/commander",
   "type": "module",
-  "version": "1.0.0",
+  "types": "./dist/index.d.ts",
+  "module": "./dist/index.js",
+  "author": "sleep-written",
+  "version": "2.0.0",
+  "license": "MIT",
   "exports": {
     ".": {
       "import": "./dist/index.ts",
       "types": "./dist/index.d.ts"
     }
   },
-  "files": [ "dist" ],
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bleed-believer/commander.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bleed-believer/commander/issues"
+  },
   "scripts": {
+    "prepare": "node --run build",
     "build:del": "rm -rf ./dist",
     "build:mts": "bleed build --config ./tsconfig.build.json",
-    "build:dts": "tsc --project ./tsconfig.build.json",
-    "build": "node --run build:del && node --run build:mts && node --run build:dts",
+    "build:dts": "tsc --project ./tsconfig.build.json && tsc-alias -p ./tsconfig.build.json",
+    "build": "node --run build:del && node --run build:dts && node --run build:mts",
     "test": "node --import @bleed-believer/cli --test --"
   },
   "devDependencies": {
     "@bleed-believer/cli": "^1.0.3",
     "@types/node": "^25.9.3",
+    "tsc-alias": "^1.8.17",
     "typescript": "^6.0.3"
   }
 }
