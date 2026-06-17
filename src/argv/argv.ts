@@ -1,4 +1,4 @@
-import type { FlagOptions, SerializedArgv } from './interfaces/index.js';
+import type { FlagOptions } from './interfaces/index.js';
 import type { ParsedArgv } from './interfaces/index.js';
 
 import { parseLiteralNames } from './parse-literal.js';
@@ -78,17 +78,24 @@ export class Argv<P extends string, F extends Record<string, FlagOptions> = Reco
     }
 
     /**
-     * Splits raw `process.argv` into positionals and flags.
-     *
-     * Everything after a bare `--` is collected under the `'--'` key in flags.
-     *
-     * @param process - Object with an `argv` array. Defaults to `globalThis.process`.
-     * @returns A `SerializedArgv` ready to be passed to {@link Argv.parse}.
+     * Tokenizes raw argv using the flags schema to correctly distinguish
+     * boolean flags (no value consumed) from value-taking flags.
+     * This prevents e.g. `--save mssql` from consuming `mssql` as the flag
+     * value when `--save` is declared as boolean.
      */
-    static serialize(process?: { argv: string[] }): SerializedArgv {
-        const args = (process?.argv ?? globalThis.process.argv).slice(2);
+    #tokenize(args: string[]): { positionals: string[]; flags: Record<string, string[]> } {
         const positionals: string[] = [];
         const flags: Record<string, string[]> = {};
+
+        const booleanKeys = new Set<string>();
+        for (const [name, opt] of Object.entries(this.#options.flags ?? {})) {
+            if (opt.type === 'boolean') {
+                booleanKeys.add(`--${camelToKebab(name)}`);
+                if (opt.short !== undefined) {
+                    booleanKeys.add(`-${opt.short}`);
+                }
+            }
+        }
 
         let i = 0;
         while (i < args.length) {
@@ -98,14 +105,19 @@ export class Argv<P extends string, F extends Record<string, FlagOptions> = Reco
                 flags['--'] = args.slice(i + 1);
                 break;
             } else if (arg.startsWith('-')) {
-                const next = args[i + 1];
-                if (next !== undefined && !next.startsWith('-')) {
+                if (booleanKeys.has(arg)) {
                     flags[arg] ??= [];
-                    flags[arg].push(next);
-                    i += 2;
+                    i++;
                 } else {
-                    flags[arg] ??= [];
-                    i += 1;
+                    const next = args[i + 1];
+                    if (next !== undefined && !next.startsWith('-')) {
+                        flags[arg] ??= [];
+                        flags[arg].push(next);
+                        i += 2;
+                    } else {
+                        flags[arg] ??= [];
+                        i++;
+                    }
                 }
             } else {
                 positionals.push(arg);
@@ -117,7 +129,10 @@ export class Argv<P extends string, F extends Record<string, FlagOptions> = Reco
     }
 
     /**
-     * Maps a {@link SerializedArgv} onto the schema defined in the constructor.
+     * Parses `process.argv` directly against the schema defined in the constructor.
+     *
+     * Uses the flags schema during tokenization so that boolean flags never
+     * accidentally consume the next token as their value.
      *
      * **Positionals template syntax:**
      * - `literal` — must match exactly (e.g. `run`).
@@ -126,15 +141,17 @@ export class Argv<P extends string, F extends Record<string, FlagOptions> = Reco
      * - `:name?` — optional capture, typed as `string | undefined`.
      * - `:name*` — variadic capture, typed as `string[]` (consumes all remaining positionals).
      *
-     * @param serialized - Pre-parsed argv produced by {@link Argv.serialize}.
+     * @param processLike - Object with an `argv` array. Defaults to `globalThis.process`.
      * @returns A fully-typed object with `positionals`, `flags`, and `tail`.
      * @throws {Error} When a literal token does not match the expected name or alias.
      */
-    parse(serialized: SerializedArgv): ParsedArgv<P, F> {
+    parse(processLike?: { argv: string[] }): ParsedArgv<P, F> {
+        const args = (processLike?.argv ?? globalThis.process.argv).slice(2);
+        const { positionals, flags } = this.#tokenize(args);
         return {
-            positionals: this.#parsePositionals(serialized.positionals) as ParsedArgv<P, F>['positionals'],
-            flags: this.#parseFlags(serialized.flags) as ParsedArgv<P, F>['flags'],
-            tail: serialized.flags['--'] ?? []
+            positionals: this.#parsePositionals(positionals) as ParsedArgv<P, F>['positionals'],
+            flags: this.#parseFlags(flags) as ParsedArgv<P, F>['flags'],
+            tail: flags['--'] ?? []
         };
     }
 }

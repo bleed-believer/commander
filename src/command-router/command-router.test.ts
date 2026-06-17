@@ -49,8 +49,7 @@ describe('CommandRouter', () => {
         });
 
         const result = await router.run({
-            positionals: ['pkg', 'i', 'mssql', 'typeorm'],
-            flags: {}
+            argv: ['node', 'script', 'pkg', 'i', 'mssql', 'typeorm']
         });
 
         t.assert.deepStrictEqual(result, { matches: true });
@@ -81,8 +80,7 @@ describe('CommandRouter', () => {
         });
 
         const result = await router.run({
-            positionals: ['pkg', 'install', 'mssql', 'typeorm'],
-            flags: {}
+            argv: ['node', 'script', 'pkg', 'install', 'mssql', 'typeorm']
         });
 
         t.assert.deepStrictEqual(result, { matches: true });
@@ -95,8 +93,7 @@ describe('CommandRouter', () => {
 
     it('Does not match when path segment is wrong', async (t: it.TestContext) => {
         const result = await buildRouter().run({
-            positionals: ['npm', 'i', 'mssql'],
-            flags: {}
+            argv: ['node', 'script', 'npm', 'i', 'mssql']
         });
         t.assert.deepStrictEqual(result, { matches: false });
     });
@@ -113,8 +110,7 @@ describe('CommandRouter', () => {
 
         const router = new CommandRouter({ targets: [helpCommand] });
         const result = await router.run({
-            positionals: ['help'],
-            flags: {}
+            argv: ['node', 'script', 'help']
         });
 
         t.assert.deepStrictEqual(result, { matches: true });
@@ -137,8 +133,7 @@ describe('CommandRouter', () => {
 
         const router = new CommandRouter({ targets: [helpCommand] });
         const result = await router.run({
-            positionals: ['h'],
-            flags: {}
+            argv: ['node', 'script', 'h']
         });
 
         t.assert.deepStrictEqual(result, { matches: true });
@@ -151,8 +146,7 @@ describe('CommandRouter', () => {
 
     it('Does not match any command', async (t: it.TestContext) => {
         const result = await buildRouter().run({
-            positionals: ['unknown'],
-            flags: {}
+            argv: ['node', 'script', 'unknown']
         });
         t.assert.deepStrictEqual(result, { matches: false });
     });
@@ -177,8 +171,7 @@ describe('CommandRouter', () => {
         });
 
         const result = await root.run({
-            positionals: ['pkg', 'scripts', 'run', 'build'],
-            flags: {}
+            argv: ['node', 'script', 'pkg', 'scripts', 'run', 'build']
         });
 
         t.assert.deepStrictEqual(result, { matches: true });
@@ -205,8 +198,7 @@ describe('CommandRouter', () => {
         });
 
         const result = await root.run({
-            positionals: ['pkg', 'other', 'run', 'build'],
-            flags: {}
+            argv: ['node', 'script', 'pkg', 'other', 'run', 'build']
         });
 
         t.assert.deepStrictEqual(result, { matches: false });

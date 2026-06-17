@@ -1,5 +1,4 @@
 import type { CommandContext, CommandOptions, CommandResult, FlagDescriptor } from './interfaces/index.js';
-import type { SerializedArgv } from '@/argv';
 
 import { Argv } from '@/argv';
 
@@ -65,14 +64,14 @@ export class Command<
      * `{ matches: true, error }` — propagating it is the caller's
      * responsibility.
      *
-     * @param serialized - Pre-parsed argv produced by {@link Argv.serialize}.
+     * @param processLike - Object with an `argv` array. Defaults to `globalThis.process`.
      * @returns A {@link CommandResult} indicating whether the command matched
      *   and, if so, whether the handler completed without error.
      */
-    async run(serialized: SerializedArgv): Promise<CommandResult> {
+    async run(processLike?: { argv: string[] }): Promise<CommandResult> {
         let context: CommandContext<P, F>;
         try {
-            context = this.#argv.parse(serialized);
+            context = this.#argv.parse(processLike);
         } catch (error: any) {
             return { matches: false };
         }

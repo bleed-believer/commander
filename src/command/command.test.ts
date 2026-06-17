@@ -30,10 +30,7 @@ describe('Command', () => {
         });
 
         const result = await target.run({
-            positionals: [ 'i', 'typescript', '@types/node' ],
-            flags: {
-                '--save-dev': []
-            }
+            argv: ['node', 'script', 'i', '--save-dev', 'typescript', '@types/node']
         });
 
         t.assert.deepStrictEqual(result, { matches: true });
@@ -73,10 +70,7 @@ describe('Command', () => {
         });
 
         const matches = await target.run({
-            positionals: [ 'i', 'typescript', '@types/node' ],
-            flags: {
-                '--save-dev': []
-            }
+            argv: ['node', 'script', 'i', '--save-dev', 'typescript', '@types/node']
         });
 
         t.assert.deepStrictEqual(matches, { matches: true, error: new Error('jajaja') });
@@ -108,10 +102,7 @@ describe('Command', () => {
         });
 
         const result = await target.run({
-            positionals: [ 'add', 'typescript' ],
-            flags: {
-                '--save': []
-            }
+            argv: ['node', 'script', 'add', '--save', 'typescript']
         });
 
         t.assert.deepStrictEqual(result, { matches: false });

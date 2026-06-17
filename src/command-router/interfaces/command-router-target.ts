@@ -1,5 +1,3 @@
-import type { SerializedArgv } from '@/argv';
-
 /**
  * Contract that any command or nested router must satisfy to participate
  * in a {@link CommandRouter} targets list.
@@ -9,14 +7,14 @@ import type { SerializedArgv } from '@/argv';
  */
 export interface CommandRouterTarget {
     /**
-     * Attempts to match and execute against the given serialized argv.
+     * Attempts to match and execute against the given argv.
      *
-     * @param serialized - Pre-parsed argv produced by {@link Argv.serialize}.
+     * @param processLike - Object with an `argv` array. Defaults to `globalThis.process`.
      * @returns `{ matches: true }` if the target handled the input,
      *   `{ matches: false }` if it did not apply,
      *   or `{ matches: true, error }` if the handler matched but threw.
      */
-    run(serialized: SerializedArgv): Promise<{
+    run(processLike?: { argv: string[] }): Promise<{
         matches: boolean;
         error?: Error;
     }>;

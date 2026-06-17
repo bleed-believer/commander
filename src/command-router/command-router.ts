@@ -1,11 +1,10 @@
 import type { CommandRouterOptions } from './interfaces/index.js';
-import type { SerializedArgv } from '@/argv';
 import type { CommandResult } from '@/command';
 
 import { parseLiteralNames } from '@/argv';
 
 /**
- * Dispatches serialized argv to an ordered list of commands or nested routers,
+ * Dispatches argv to an ordered list of commands or nested routers,
  * optionally consuming a path prefix before delegating.
  *
  * Targets are tried in declaration order; the first one that returns
@@ -27,7 +26,7 @@ import { parseLiteralNames } from '@/argv';
  *     ]
  * });
  *
- * await router.run(Argv.serialize());
+ * await router.run();
  * ```
  */
 export class CommandRouter {
@@ -38,35 +37,44 @@ export class CommandRouter {
     }
 
     /**
-     * Attempts to match and execute a target against the given serialized argv.
+     * Attempts to match and execute a target against the given argv.
      *
      * If `options.path` is set, each space-separated token must match the
-     * corresponding leading positional (aliases included). On a full prefix
-     * match those positionals are stripped before targets are tried. A partial
-     * or missing prefix match returns `{ matches: false }` immediately without
-     * consulting any target.
+     * corresponding leading argv token (aliases included). On a full prefix
+     * match those tokens are stripped before targets are tried. A partial
+     * or missing prefix match returns `{ matches: false }` immediately.
      *
-     * @param serialized - Pre-parsed argv produced by {@link Argv.serialize}.
+     * Path prefix tokens are expected to appear at the start of argv (after
+     * the node/script entries), before any flags.
+     *
+     * @param processLike - Object with an `argv` array. Defaults to `globalThis.process`.
      * @returns The result of the first matching target, or `{ matches: false }`
      *   if no target matched.
      */
-    async run(serialized: SerializedArgv): Promise<CommandResult> {
+    async run(processLike?: { argv: string[] }): Promise<CommandResult> {
+        let current = processLike ?? { argv: globalThis.process.argv };
+
         if (this.#options.path !== undefined) {
             const tokens = this.#options.path.split(' ');
+            const args = current.argv.slice(2);
+
             for (let i = 0; i < tokens.length; i++) {
                 const validNames = parseLiteralNames(tokens[i]);
-                if (!validNames.includes(serialized.positionals[i] ?? '')) {
+                if (!validNames.includes(args[i] ?? '')) {
                     return { matches: false };
                 }
             }
-            serialized = {
-                ...serialized,
-                positionals: serialized.positionals.slice(tokens.length)
+
+            current = {
+                argv: [
+                    ...current.argv.slice(0, 2),
+                    ...current.argv.slice(2 + tokens.length)
+                ]
             };
         }
 
         for (const target of this.#options.targets) {
-            const result = await target.run(serialized);
+            const result = await target.run(current);
             if (result.matches || result.error) {
                 return result;
             }

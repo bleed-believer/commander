@@ -1,7 +1,5 @@
 import type { CommanderInject, CommanderTarget } from './interfaces/index.js';
 
-import { Argv } from '@/argv';
-
 export class Commander {
     #injected: Required<CommanderInject>;
     #targets: CommanderTarget[];
@@ -14,9 +12,8 @@ export class Commander {
     }
 
     async run(): Promise<void> {
-        const serialized = Argv.serialize(this.#injected.process);
         for (const target of this.#targets) {
-            const result = await target.run(serialized);
+            const result = await target.run(this.#injected.process);
             if (result.error) {
                 throw result.error;
             } else if (result.matches) {
