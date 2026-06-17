@@ -1,0 +1,24 @@
+{
+  "name": "@bleed-believer/commander",
+  "type": "module",
+  "version": "1.0.0",
+  "exports": {
+    ".": {
+      "import": "./dist/index.ts",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [ "dist" ],
+  "scripts": {
+    "build:del": "rm -rf ./dist",
+    "build:mts": "bleed build --config ./tsconfig.build.json",
+    "build:dts": "tsc --project ./tsconfig.build.json",
+    "build": "node --run build:del && node --run build:mts && node --run build:dts",
+    "test": "node --import @bleed-believer/cli --test --"
+  },
+  "devDependencies": {
+    "@bleed-believer/cli": "^1.0.3",
+    "@types/node": "^25.9.3",
+    "typescript": "^6.0.3"
+  }
+}

@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "moduleResolution": "node16",
+        "module": "node20",
+        "target": "es2025",
+
+        "verbatimModuleSyntax": true,
+        "sourceMap": true,
+        "strict": true,
+
+        "rootDir": "./src",
+        "outDir": "./dist",
+
+        "types": [ "node" ]
+    }
+}
