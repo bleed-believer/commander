@@ -1,6 +1,6 @@
 import type { CommandContext, CommandOptions, CommandResult, FlagDescriptor } from './interfaces/index.js';
 
-import { Argv } from '@/argv';
+import { Argv, StaticMismatchError, PositionalMismatchError } from '@/argv';
 
 /**
  * Represents a single CLI command with a typed positionals template,
@@ -73,7 +73,13 @@ export class Command<
         try {
             context = this.#argv.parse(processLike);
         } catch (error: any) {
-            return { matches: false };
+            if (error instanceof StaticMismatchError) {
+                return { matches: false };
+            } else if (error instanceof PositionalMismatchError) {
+                return { matches: false, error };
+            } else {
+                return { matches: true, error };
+            }
         }
 
         try {

@@ -3,6 +3,9 @@ import type { ParsedArgv } from './interfaces/index.js';
 
 import { parseLiteralNames } from './parse-literal.js';
 import { camelToKebab } from './camel-to-kebab.js';
+import { StaticMismatchError } from './static-mismatch-error.js';
+import { PositionalMismatchError } from './positional-mismatch-error.js';
+import { FlagParseError } from './flag-parse-error.js';
 
 /**
  * Parses command-line arguments against a typed schema, providing
@@ -28,21 +31,38 @@ export class Argv<P extends string, F extends Record<string, FlagOptions> = Reco
 
         for (const token of tokens) {
             if (token.startsWith(':')) {
-                if (token.endsWith('*')) {
+                if (token.endsWith('+')) {
+                    const vals = positionals.slice(posIdx);
+                    if (vals.length === 0) {
+                        throw new PositionalMismatchError(
+                            `Positional "${token.slice(1, -1)}" requires at least one value`
+                        );
+                    }
+                    result[token.slice(1, -1)] = vals;
+                    break;
+                } else if (token.endsWith('*')) {
                     result[token.slice(1, -1)] = positionals.slice(posIdx);
                     break;
                 } else if (token.endsWith('?')) {
                     result[token.slice(1, -1)] = positionals[posIdx];
                     posIdx++;
                 } else {
-                    result[token.slice(1)] = positionals[posIdx] ?? '';
+                    const val = positionals[posIdx];
+                    if (val === undefined) {
+                        throw new PositionalMismatchError(
+                            `Required positional "${token.slice(1)}" at position ${posIdx} is missing`
+                        );
+                    }
+                    result[token.slice(1)] = val;
                     posIdx++;
                 }
             } else {
                 const validNames = parseLiteralNames(token);
                 const actual = positionals[posIdx];
-                if (actual !== undefined && !validNames.includes(actual)) {
-                    throw new Error(`Expected "${validNames.join('" or "')}" at position ${posIdx}, got "${actual}"`);
+                if (actual === undefined || !validNames.includes(actual)) {
+                    throw new StaticMismatchError(
+                        `Expected "${validNames.join('" or "')}" at position ${posIdx}, got "${actual ?? ''}"`
+                    );
                 }
                 posIdx++;
             }
@@ -66,9 +86,26 @@ export class Argv<P extends string, F extends Record<string, FlagOptions> = Reco
             }
 
             if (opt.type === 'boolean') {
-                result[name] = true;
+                result[name] = values[0] !== 'false';
             } else if (opt.type === 'number') {
-                result[name] = opt.array === true ? values.map(Number) : Number(values[0]);
+                if (opt.array === true) {
+                    const nums = values.map(Number);
+                    const badIdx = nums.findIndex(n => isNaN(n));
+                    if (badIdx !== -1) {
+                        throw new FlagParseError(
+                            `Flag "${longKey}" expects a number but got "${values[badIdx]}"`
+                        );
+                    }
+                    result[name] = nums;
+                } else {
+                    const num = Number(values[0]);
+                    if (isNaN(num)) {
+                        throw new FlagParseError(
+                            `Flag "${longKey}" expects a number but got "${values[0]}"`
+                        );
+                    }
+                    result[name] = num;
+                }
             } else {
                 result[name] = opt.array === true ? values : values[0];
             }
@@ -105,7 +142,14 @@ export class Argv<P extends string, F extends Record<string, FlagOptions> = Reco
                 flags['--'] = args.slice(i + 1);
                 break;
             } else if (arg.startsWith('-')) {
-                if (booleanKeys.has(arg)) {
+                const eqIdx = arg.indexOf('=');
+                if (eqIdx !== -1) {
+                    const key = arg.slice(0, eqIdx);
+                    const val = arg.slice(eqIdx + 1);
+                    flags[key] ??= [];
+                    flags[key].push(val);
+                    i++;
+                } else if (booleanKeys.has(arg)) {
                     flags[arg] ??= [];
                     i++;
                 } else {
@@ -139,7 +183,8 @@ export class Argv<P extends string, F extends Record<string, FlagOptions> = Reco
      * - `cmd(alias)` — matches the main name or any alias (e.g. `install(i)`).
      * - `:name` — required capture, typed as `string`.
      * - `:name?` — optional capture, typed as `string | undefined`.
-     * - `:name*` — variadic capture, typed as `string[]` (consumes all remaining positionals).
+     * - `:name*` — variadic capture, zero or more values, typed as `string[]`.
+     * - `:name+` — variadic capture, one or more values, typed as `[string, ...string[]]`; throws if empty.
      *
      * @param processLike - Object with an `argv` array. Defaults to `globalThis.process`.
      * @returns A fully-typed object with `positionals`, `flags`, and `tail`.

@@ -1,6 +1,7 @@
 import type { FlagOptions } from './argv-options.js';
 
 type PositionalsEntry<Token extends string> =
+    Token extends `:${infer Name}+` ? { [K in Name]: [string, ...string[]] } :
     Token extends `:${infer Name}*` ? { [K in Name]: string[] } :
     Token extends `:${infer Name}?` ? { [K in Name]?: string } :
     Token extends `:${infer Name}` ? { [K in Name]: string } :
