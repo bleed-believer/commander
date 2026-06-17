@@ -33,7 +33,8 @@ export class Commander {
     constructor(targets: CommanderTarget[], inject?: CommanderInject) {
         this.#targets = targets;
         this.#injected = {
-            process:    inject?.process ?? globalThis.process
+            process:    inject?.process ?? globalThis.process,
+            console:    inject?.console ?? globalThis.console
         };
     }
 
@@ -53,5 +54,9 @@ export class Commander {
                 return;
             }
         }
+    }
+
+    docs(): unknown {
+        throw new Error('Not implemented yet');
     }
 }
