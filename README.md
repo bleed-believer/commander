@@ -57,6 +57,10 @@ The `positionals` string is a space-separated list of tokens, matched left-to-ri
 | `:name*` | Variadic, zero-or-more; consumes all remaining positionals | `string[]` |
 | `:name+` | Variadic, one-or-more; throws if empty | `[string, ...string[]]` |
 
+> **Notes:**
+> - A variadic token (`:name*` / `:name+`) must be the **last** token in the template — it consumes every remaining positional. A template with a token after a variadic throws at construction time.
+> - An empty template (`positionals: ''`) captures nothing and matches an invocation with no positionals — use it for a flags-only or default command.
+
 **Examples:**
 
 ```ts
@@ -101,7 +105,12 @@ Flag names are automatically converted to `--kebab-case` on the CLI:
 | `saveDev` | `--save-dev` |
 | `outputDir` | `--output-dir` |
 
-**Boolean flags** never consume the next token as their value — so `--save foo` with `save` declared as `boolean` leaves `foo` as a positional.
+**Value rules:**
+
+- **Boolean flags** never consume the next token as their value — `--save foo` with `save` declared as `boolean` leaves `foo` as a positional.
+- A lone `-` is treated as a positional (the usual stdin convention), not a flag.
+- **String** flags accept an explicit empty value (`--name=` or `--name ''`) as the empty string `''`. **Number** flags reject an empty value as a missing value. If a command needs a non-empty string, validate it in your handler.
+- A **non-array** value flag passed more than once throws `FlagParseError`; declare `array: true` to accept multiple values.
 
 #### Flag input formats
 
@@ -154,7 +163,7 @@ flags.include  // string[] | undefined
 |---|---|
 | `StaticMismatchError` | A literal or alias token in the template did not match the input. |
 | `PositionalMismatchError` | A required positional (`:name` or `:name+`) was not provided. |
-| `FlagParseError` | A flag declared as `number` received a non-numeric value. |
+| `FlagParseError` | A flag value was invalid: a required flag was missing, a value flag was given without a value or more than once, or a `number` flag received a non-numeric/empty value. |
 
 ---
 
@@ -193,7 +202,7 @@ interface CommandTarget {
 }
 ```
 
-`onInit` is called first; `onDestroy` (optional) is called after `onInit` completes. Use `onDestroy` to close file handles, DB connections, or other resources.
+`onInit` is called first; `onDestroy` (optional) runs afterwards. `onDestroy` is guaranteed to run **even when `onInit` throws**, so a partially-initialized handler can still release file handles, DB connections, or other resources.
 
 ### `CommandResult` return value
 
@@ -474,7 +483,7 @@ node mycli.js help
 |---|---|
 | `StaticMismatchError` | A literal or alias token did not match. Signals "wrong command". |
 | `PositionalMismatchError` | A required positional (`:name` or `:name+`) was absent. |
-| `FlagParseError` | A `number` flag received a non-numeric string. |
+| `FlagParseError` | A flag value was invalid: required flag missing, value flag without a value or repeated for a non-array flag, or a `number` flag given a non-numeric/empty value. |
 
 ---
 
