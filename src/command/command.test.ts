@@ -77,6 +77,30 @@ describe('Command', () => {
         t.assert.deepStrictEqual(matches, { matches: true, error: new Error('jajaja') });
     });
 
+    it('Runs onDestroy even when onInit throws', async (t: it.TestContext) => {
+        let destroyed = false;
+
+        const target = new Command({
+            description: 'Install a new package',
+            positionals: 'install(i) :packages*',
+            callback: _ => new class implements CommandTarget {
+                onInit(): void {
+                    throw new Error('init failed');
+                }
+                onDestroy(): void {
+                    destroyed = true;
+                }
+            }
+        });
+
+        const result = await target.run({
+            argv: ['node', 'script', 'i', 'typescript']
+        });
+
+        t.assert.deepStrictEqual(result, { matches: true, error: new Error('init failed') });
+        t.assert.strictEqual(destroyed, true);
+    });
+
     it('Doesn\'t match the criteria', async (t: it.TestContext) => {
         let capturedContext: unknown;
 

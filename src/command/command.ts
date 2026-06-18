@@ -95,8 +95,14 @@ export class Command<
 
         try {
             const handler = this.#options.callback(context);
-            await handler.onInit();
-            await handler.onDestroy?.();
+            try {
+                await handler.onInit();
+            } finally {
+                // onDestroy is teardown for resources allocated during onInit
+                // (file handles, connections); it must run even when onInit
+                // throws so a partially-initialized handler can clean up.
+                await handler.onDestroy?.();
+            }
             return { matches: true };
 
         } catch (error: any) {
