@@ -1,5 +1,5 @@
 import type { CommandRouterOptions } from './interfaces/index.js';
-import type { CommandResult } from '@/command/index.js';
+import type { CommandDoc, CommandResult } from '@/command/index.js';
 
 import { parseLiteralNames } from '@/argv/index.js';
 
@@ -34,6 +34,16 @@ export class CommandRouter {
 
     constructor(options: CommandRouterOptions) {
         this.#options = options;
+    }
+
+    docs(prefix: string[] = []): CommandDoc[] {
+        const pathTokens = this.#options.path ? this.#options.path.split(' ') : [];
+        const newPrefix = [...prefix, ...pathTokens];
+        const result: CommandDoc[] = [];
+        for (const target of this.#options.targets) {
+            result.push(...target.docs(newPrefix));
+        }
+        return result;
     }
 
     /**

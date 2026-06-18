@@ -1,3 +1,5 @@
+import type { CommandDoc } from '@/command/interfaces/index.js';
+
 /**
  * Contract that any command or nested router must satisfy to participate
  * in a {@link CommandRouter} targets list.
@@ -18,4 +20,6 @@ export interface CommandRouterTarget {
         matches: boolean;
         error?: Error;
     }>;
+
+    docs(prefix?: string[]): CommandDoc[];
 }

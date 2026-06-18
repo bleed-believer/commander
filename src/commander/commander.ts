@@ -1,4 +1,5 @@
 import type { CommanderInject, CommanderTarget } from './interfaces/index.js';
+import type { CommandDoc } from '@/command/interfaces/index.js';
 
 /**
  * Top-level dispatcher that tries each registered target in order and
@@ -56,7 +57,11 @@ export class Commander {
         }
     }
 
-    docs(): unknown {
-        throw new Error('Not implemented yet');
+    docs(): CommandDoc[] {
+        const result: CommandDoc[] = [];
+        for (const target of this.#targets) {
+            result.push(...target.docs([]));
+        }
+        return result;
     }
 }

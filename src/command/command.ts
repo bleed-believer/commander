@@ -1,4 +1,4 @@
-import type { CommandContext, CommandOptions, CommandResult, FlagDescriptor } from './interfaces/index.js';
+import type { CommandContext, CommandDoc, CommandOptions, CommandResult, FlagDescriptor } from './interfaces/index.js';
 
 import { Argv, StaticMismatchError, PositionalMismatchError } from '@/argv/index.js';
 
@@ -51,6 +51,17 @@ export class Command<
             positionals: options.positionals,
             flags: options.flags
         });
+    }
+
+    docs(prefix: string[] = []): CommandDoc[] {
+        const tokens = this.#options.positionals.split(' ');
+        const flags = Object.entries(this.#options.flags ?? {}).map(([name, descriptor]) => ({
+            name,
+            type: descriptor.type,
+            required: descriptor.required ?? false,
+            description: descriptor.description,
+        }));
+        return [{ path: [...prefix, ...tokens], description: this.#options.description, flags }];
     }
 
     /**
