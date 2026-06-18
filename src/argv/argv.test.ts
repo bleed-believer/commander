@@ -261,7 +261,32 @@ describe('new Argv(...).parse(...)', () => {
 
         t.assert.throws(() => argv.parse({
             argv: ['node', 'script', 'run', '--count=']
-        }), /Flag "--count" expects a number but got ""/);
+        }), /Flag "--count" expects a value/);
+    });
+
+    it('accepts an explicit empty string value for a string flag', (t: it.TestContext) => {
+        const argv = new Argv({
+            positionals: 'run',
+            flags: {
+                message: { type: 'string', short: 'm' }
+            }
+        });
+
+        t.assert.deepStrictEqual(argv.parse({
+            argv: ['node', 'script', 'run', '--message=']
+        }), {
+            positionals: {},
+            flags: { message: '' },
+            tail: []
+        });
+
+        t.assert.deepStrictEqual(argv.parse({
+            argv: ['node', 'script', 'run', '--message', '']
+        }), {
+            positionals: {},
+            flags: { message: '' },
+            tail: []
+        });
     });
 
     it('throws on Infinity and hexadecimal number flag values', (t: it.TestContext) => {

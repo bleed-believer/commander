@@ -151,6 +151,17 @@ export class Argv<P extends string, F extends Record<string, FlagOptions> = Reco
             }
 
             if (opt.type === 'number') {
+                // An empty token is not a number but, more usefully, it means
+                // no value was actually supplied (`--count`, `--count=`, or
+                // `--count ""`). Report it as a missing value so the three
+                // forms are consistent, rather than "expects a number but
+                // got """. Empty strings remain valid for string flags.
+                if (values.some(value => value === '')) {
+                    throw new FlagParseError(
+                        `Flag "${longKey}" expects a value`
+                    );
+                }
+
                 if (opt.array === true) {
                     const nums = values.map(parseNumber);
                     const badIdx = nums.findIndex(n => isNaN(n));
