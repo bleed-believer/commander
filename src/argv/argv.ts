@@ -23,6 +23,26 @@ export class Argv<P extends string, F extends Record<string, FlagOptions> = Reco
      */
     constructor(options: { positionals: P; flags?: F }) {
         this.#options = options;
+        this.#validatePositionals();
+    }
+
+    // A variadic token (`:name*` / `:name+`) consumes every remaining
+    // positional, so any token after it can never be reached at runtime even
+    // though the type system still infers a capture for it. Reject such
+    // templates up front so the mismatch fails loudly at construction instead
+    // of silently yielding `undefined` for the unreachable capture.
+    #validatePositionals(): void {
+        const tokens = this.#options.positionals.split(' ').filter(token => token.length > 0);
+        const variadicIdx = tokens.findIndex(token =>
+            token.startsWith(':') && (token.endsWith('*') || token.endsWith('+'))
+        );
+
+        if (variadicIdx !== -1 && variadicIdx !== tokens.length - 1) {
+            throw new Error(
+                `Variadic positional "${tokens[variadicIdx]}" must be the last token ` +
+                `in template "${this.#options.positionals}"`
+            );
+        }
     }
 
     #parsePositionals(positionals: string[]): Record<string, string | string[] | undefined> {

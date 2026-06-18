@@ -133,6 +133,18 @@ describe('new Argv(...).parse(...)', () => {
         });
     });
 
+    it('throws when a variadic token is not the last in the template', (t: it.TestContext) => {
+        t.assert.throws(() => new Argv({
+            positionals: 'cp :srcs* :dest'
+        }), /Variadic positional ":srcs\*" must be the last token/);
+    });
+
+    it('throws when a one-or-more variadic is not the last in the template', (t: it.TestContext) => {
+        t.assert.throws(() => new Argv({
+            positionals: 'cp :srcs+ :dest'
+        }), /Variadic positional ":srcs\+" must be the last token/);
+    });
+
     it('matches a flags-only command with an empty positionals template', (t: it.TestContext) => {
         const argv = new Argv({
             positionals: '',
