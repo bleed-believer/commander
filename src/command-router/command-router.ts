@@ -1,5 +1,5 @@
-import type { CommandRouterOptions } from './interfaces/index.js';
 import type { CommandDoc, CommandResult } from '@/command/index.js';
+import type { CommandRouterOptions } from './interfaces/index.js';
 
 import { parseLiteralNames } from '@/argv/index.js';
 

@@ -1,6 +1,7 @@
 import type { CommandTarget } from './interfaces/index.js';
 
 import { describe, it } from 'node:test';
+
 import { Command } from './command.js';
 
 describe('Command', () => {

@@ -1,13 +1,12 @@
-import type { FlagOptions } from './interfaces/index.js';
-import type { ParsedArgv } from './interfaces/index.js';
+import type { FlagOptions, ParsedArgv } from './interfaces/index.js';
 
-import { parseLiteralNames } from './parse-literal.js';
-import { camelToKebab } from './camel-to-kebab.js';
-import { isNegativeNumber } from './is-negative-number.js';
-import { parseNumber } from './parse-number.js';
-import { StaticMismatchError } from './static-mismatch-error.js';
 import { PositionalMismatchError } from './positional-mismatch-error.js';
+import { StaticMismatchError } from './static-mismatch-error.js';
+import { parseLiteralNames } from './parse-literal.js';
+import { isNegativeNumber } from './is-negative-number.js';
 import { FlagParseError } from './flag-parse-error.js';
+import { camelToKebab } from './camel-to-kebab.js';
+import { parseNumber } from './parse-number.js';
 
 /**
  * Parses command-line arguments against a typed schema, providing
