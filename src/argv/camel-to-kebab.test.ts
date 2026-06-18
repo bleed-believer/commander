@@ -15,4 +15,9 @@ describe('camelToKebab', () => {
     it('handles multiple uppercase letters', () => {
         strictEqual(camelToKebab('saveDevDependencies'), 'save-dev-dependencies');
     });
+
+    it('does not prefix a dash for a leading uppercase letter', () => {
+        strictEqual(camelToKebab('Foo'), 'foo');
+        strictEqual(camelToKebab('FooBar'), 'foo-bar');
+    });
 });
