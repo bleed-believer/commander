@@ -101,6 +101,47 @@ describe('Command', () => {
         t.assert.strictEqual(destroyed, true);
     });
 
+    it('Surfaces the onInit error when onDestroy also throws', async (t: it.TestContext) => {
+        const target = new Command({
+            positionals: 'install(i) :packages*',
+            callback: _ => new class implements CommandTarget {
+                onInit(): void {
+                    throw new Error('init failed');
+                }
+                onDestroy(): void {
+                    throw new Error('destroy failed');
+                }
+            }
+        });
+
+        const result = await target.run({
+            argv: ['node', 'script', 'i', 'typescript']
+        });
+
+        t.assert.strictEqual(result.matches, true);
+        t.assert.strictEqual(result.error?.message, 'init failed');
+        t.assert.strictEqual((result.error?.cause as Error)?.message, 'destroy failed');
+    });
+
+    it('Surfaces the onDestroy error when onInit succeeds', async (t: it.TestContext) => {
+        const target = new Command({
+            positionals: 'install(i) :packages*',
+            callback: _ => new class implements CommandTarget {
+                onInit(): void {}
+                onDestroy(): void {
+                    throw new Error('destroy failed');
+                }
+            }
+        });
+
+        const result = await target.run({
+            argv: ['node', 'script', 'i', 'typescript']
+        });
+
+        t.assert.strictEqual(result.matches, true);
+        t.assert.strictEqual(result.error?.message, 'destroy failed');
+    });
+
     it('Doesn\'t match the criteria', async (t: it.TestContext) => {
         let capturedContext: unknown;
 

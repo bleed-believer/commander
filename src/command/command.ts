@@ -100,13 +100,36 @@ export class Command<
 
         try {
             const handler = this.#options.callback(context);
+
+            let initFailed = false;
+            let initError: unknown;
             try {
                 await handler.onInit();
-            } finally {
-                // onDestroy is teardown for resources allocated during onInit
-                // (file handles, connections); it must run even when onInit
-                // throws so a partially-initialized handler can clean up.
+            } catch (error) {
+                initFailed = true;
+                initError = error;
+            }
+
+            // onDestroy is teardown for resources allocated during onInit
+            // (file handles, connections); it must run even when onInit threw
+            // so a partially-initialized handler can clean up.
+            try {
                 await handler.onDestroy?.();
+            } catch (destroyError) {
+                // A cleanup failure must not mask the onInit failure, which is
+                // the actual reason the command failed. Keep the init error and
+                // attach the cleanup error as its cause; surface the cleanup
+                // error on its own only when onInit succeeded.
+                if (!initFailed) {
+                    throw destroyError;
+                }
+                if (initError instanceof Error && initError.cause === undefined) {
+                    initError.cause = destroyError;
+                }
+            }
+
+            if (initFailed) {
+                throw initError;
             }
             return { matches: true };
 
