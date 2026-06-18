@@ -141,6 +141,15 @@ export class Argv<P extends string, F extends Record<string, FlagOptions> = Reco
                 );
             }
 
+            // A non-array value flag carries a single value; receiving several
+            // (e.g. `--name a --name b`) is ambiguous, so reject it instead of
+            // silently keeping the first and discarding the rest.
+            if (opt.array !== true && values.length > 1) {
+                throw new FlagParseError(
+                    `Flag "${longKey}" expects a single value but received ${values.length}`
+                );
+            }
+
             if (opt.type === 'number') {
                 if (opt.array === true) {
                     const nums = values.map(parseNumber);

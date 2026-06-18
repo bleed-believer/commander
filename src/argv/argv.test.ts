@@ -193,6 +193,38 @@ describe('new Argv(...).parse(...)', () => {
         });
     });
 
+    it('throws when a non-array value flag is given more than once', (t: it.TestContext) => {
+        const argv = new Argv({
+            positionals: 'run',
+            flags: {
+                name: { type: 'string' }
+            }
+        });
+
+        t.assert.throws(() => argv.parse({
+            argv: ['node', 'script', 'run', '--name', 'a', '--name', 'b']
+        }), /Flag "--name" expects a single value but received 2/);
+    });
+
+    it('accepts repeated values for an array flag', (t: it.TestContext) => {
+        const argv = new Argv({
+            positionals: 'run',
+            flags: {
+                name: { type: 'string', array: true }
+            }
+        });
+
+        const resp = argv.parse({
+            argv: ['node', 'script', 'run', '--name', 'a', '--name', 'b']
+        });
+
+        t.assert.deepStrictEqual(resp, {
+            positionals: {},
+            flags: { name: ['a', 'b'] },
+            tail: []
+        });
+    });
+
     it('throws when a string flag is given without a value', (t: it.TestContext) => {
         const argv = new Argv({
             positionals: 'run',
