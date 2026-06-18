@@ -97,6 +97,66 @@ describe('new Argv(...).parse(...)', () => {
         });
     });
 
+    it('unknown flag does not swallow the following positional', (t: it.TestContext) => {
+        const argv = new Argv({
+            positionals: 'run :target'
+        });
+
+        const resp = argv.parse({
+            argv: ['node', 'script', 'run', '--foo', 'prod']
+        });
+
+        t.assert.deepStrictEqual(resp, {
+            positionals: { target: 'prod' },
+            flags: {},
+            tail: []
+        });
+    });
+
+    it('boolean flag does not swallow the following positional', (t: it.TestContext) => {
+        const argv = new Argv({
+            positionals: 'run :target',
+            flags: {
+                verbose: {
+                    type: 'boolean',
+                    short: 'v'
+                }
+            }
+        });
+
+        const resp = argv.parse({
+            argv: ['node', 'script', 'run', '--verbose', 'prod']
+        });
+
+        t.assert.deepStrictEqual(resp, {
+            positionals: { target: 'prod' },
+            flags: { verbose: true },
+            tail: []
+        });
+    });
+
+    it('declared value flag still consumes its value', (t: it.TestContext) => {
+        const argv = new Argv({
+            positionals: 'run :target',
+            flags: {
+                config: {
+                    type: 'string',
+                    short: 'c'
+                }
+            }
+        });
+
+        const resp = argv.parse({
+            argv: ['node', 'script', 'run', '--config', './tsconfig.json', 'prod']
+        });
+
+        t.assert.deepStrictEqual(resp, {
+            positionals: { target: 'prod' },
+            flags: { config: './tsconfig.json' },
+            tail: []
+        });
+    });
+
     it('throws when a required flag is missing', (t: it.TestContext) => {
         const argv = new Argv({
             positionals: 'run :target?',

@@ -120,21 +120,23 @@ export class Argv<P extends string, F extends Record<string, FlagOptions> = Reco
     }
 
     /**
-     * Tokenizes raw argv using the flags schema to correctly distinguish
-     * boolean flags (no value consumed) from value-taking flags.
-     * This prevents e.g. `--save mssql` from consuming `mssql` as the flag
-     * value when `--save` is declared as boolean.
+     * Tokenizes raw argv using the flags schema so that only declared
+     * value-taking flags (`string`/`number`) consume the following token.
+     * Boolean flags and flags absent from the schema never consume a value,
+     * which prevents e.g. `--save mssql` from eating `mssql` when `--save`
+     * is boolean, and stops an unknown/typo'd flag from silently swallowing
+     * the next positional.
      */
     #tokenize(args: string[]): { positionals: string[]; flags: Record<string, string[]> } {
         const positionals: string[] = [];
         const flags: Record<string, string[]> = {};
 
-        const booleanKeys = new Set<string>();
+        const valueKeys = new Set<string>();
         for (const [name, opt] of Object.entries(this.#options.flags ?? {})) {
-            if (opt.type === 'boolean') {
-                booleanKeys.add(`--${camelToKebab(name)}`);
+            if (opt.type !== 'boolean') {
+                valueKeys.add(`--${camelToKebab(name)}`);
                 if (opt.short !== undefined) {
-                    booleanKeys.add(`-${opt.short}`);
+                    valueKeys.add(`-${opt.short}`);
                 }
             }
         }
@@ -154,10 +156,7 @@ export class Argv<P extends string, F extends Record<string, FlagOptions> = Reco
                     flags[key] ??= [];
                     flags[key].push(val);
                     i++;
-                } else if (booleanKeys.has(arg)) {
-                    flags[arg] ??= [];
-                    i++;
-                } else {
+                } else if (valueKeys.has(arg)) {
                     const next = args[i + 1];
                     if (next !== undefined && !next.startsWith('-')) {
                         flags[arg] ??= [];
@@ -167,6 +166,12 @@ export class Argv<P extends string, F extends Record<string, FlagOptions> = Reco
                         flags[arg] ??= [];
                         i++;
                     }
+                } else {
+                    // Boolean flags and unknown flags never consume the next
+                    // token, so a following positional is preserved instead of
+                    // being silently swallowed as a flag value.
+                    flags[arg] ??= [];
+                    i++;
                 }
             } else {
                 positionals.push(arg);
