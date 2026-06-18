@@ -27,6 +27,11 @@ describe('parseNumber', () => {
         ok(Number.isNaN(parseNumber('-Infinity')));
     });
 
+    it('rejects literals that overflow to a non-finite value', () => {
+        ok(Number.isNaN(parseNumber('1e999')));
+        ok(Number.isNaN(parseNumber('-1e999')));
+    });
+
     it('rejects non-numeric tokens', () => {
         ok(Number.isNaN(parseNumber('abc')));
         ok(Number.isNaN(parseNumber('1e')));
