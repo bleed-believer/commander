@@ -182,6 +182,48 @@ describe('CommandRouter', () => {
         });
     });
 
+    it('falls through to a sibling command when an earlier one is missing a required positional', async (t: it.TestContext) => {
+        let matched = false;
+
+        const router = new CommandRouter({
+            targets: [
+                new Command({
+                    positionals: 'deploy :env',
+                    callback: _ => ({ onInit() {} })
+                }),
+                new Command({
+                    positionals: 'deploy',
+                    callback: _ => ({ onInit() { matched = true; } })
+                })
+            ]
+        });
+
+        const result = await router.run({
+            argv: ['node', 'script', 'deploy']
+        });
+
+        t.assert.deepStrictEqual(result, { matches: true });
+        t.assert.strictEqual(matched, true);
+    });
+
+    it('surfaces the deferred error when no sibling matches', async (t: it.TestContext) => {
+        const router = new CommandRouter({
+            targets: [
+                new Command({
+                    positionals: 'deploy :env',
+                    callback: _ => ({ onInit() {} })
+                })
+            ]
+        });
+
+        const result = await router.run({
+            argv: ['node', 'script', 'deploy']
+        });
+
+        t.assert.strictEqual(result.matches, false);
+        t.assert.ok(result.error instanceof Error);
+    });
+
     it('Does not match multi-segment path when second segment is wrong', async (t: it.TestContext) => {
         const runCommand = new Command({
             positionals: 'run :script',

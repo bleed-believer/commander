@@ -42,18 +42,31 @@ export class Commander {
     /**
      * Dispatches argv to the registered targets.
      *
-     * Iterates targets in order, stopping at the first match or error.
-     * Re-throws any error carried in the result so unhandled parse or
-     * handler failures surface to the caller.
+     * Iterates targets in order. A target that matched short-circuits the
+     * loop; if it also carries an error (a bad flag value or a throwing
+     * handler) that error is re-thrown. A target that did not match but
+     * reported an error — a matched command name with a missing required
+     * positional — is remembered and only thrown if no later target matches,
+     * so more permissive sibling commands still get a chance to handle the
+     * input. If no target matches and none deferred an error, `run` returns
+     * normally.
      */
     async run(): Promise<void> {
+        let deferred: Error | undefined;
         for (const target of this.#targets) {
             const result = await target.run(this.#injected.process);
-            if (result.error) {
-                throw result.error;
-            } else if (result.matches) {
+            if (result.matches) {
+                if (result.error) {
+                    throw result.error;
+                }
                 return;
+            } else if (result.error && deferred === undefined) {
+                deferred = result.error;
             }
+        }
+
+        if (deferred) {
+            throw deferred;
         }
     }
 

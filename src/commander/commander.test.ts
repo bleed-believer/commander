@@ -202,4 +202,33 @@ describe('Commander', () => {
             ]);
         });
     });
+
+    describe('run()', () => {
+        it('falls through to a sibling command when an earlier one is missing a required positional', async (t: it.TestContext) => {
+            let matched = false;
+            const app = new Commander([
+                new Command({ positionals: 'deploy :env', callback: _ => ({ onInit() {} }) }),
+                new Command({ positionals: 'deploy', callback: _ => ({ onInit() { matched = true; } }) })
+            ], { process: { argv: ['node', 'script', 'deploy'] } });
+
+            await app.run();
+            t.assert.strictEqual(matched, true);
+        });
+
+        it('throws the deferred error when no target matches', async (t: it.TestContext) => {
+            const app = new Commander([
+                new Command({ positionals: 'deploy :env', callback: _ => ({ onInit() {} }) })
+            ], { process: { argv: ['node', 'script', 'deploy'] } });
+
+            await t.assert.rejects(() => app.run());
+        });
+
+        it('returns normally when nothing matches and no error was deferred', async (t: it.TestContext) => {
+            const app = new Commander([
+                new Command({ positionals: 'deploy', callback: _ => ({ onInit() {} }) })
+            ], { process: { argv: ['node', 'script', 'unknown'] } });
+
+            await t.assert.doesNotReject(() => app.run());
+        });
+    });
 });
