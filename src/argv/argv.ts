@@ -197,7 +197,7 @@ export class Argv<P extends string, F extends Record<string, FlagOptions> = Reco
             if (arg === '--') {
                 flags['--'] = args.slice(i + 1);
                 break;
-            } else if (arg.startsWith('-') && !isNegativeNumber(arg)) {
+            } else if (arg.startsWith('-') && arg !== '-' && !isNegativeNumber(arg)) {
                 const eqIdx = arg.indexOf('=');
                 if (eqIdx !== -1) {
                     const key = arg.slice(0, eqIdx);

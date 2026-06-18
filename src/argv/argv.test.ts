@@ -271,6 +271,22 @@ describe('new Argv(...).parse(...)', () => {
         });
     });
 
+    it('treats a lone dash as a positional', (t: it.TestContext) => {
+        const argv = new Argv({
+            positionals: 'cat :file'
+        });
+
+        const resp = argv.parse({
+            argv: ['node', 'script', 'cat', '-']
+        });
+
+        t.assert.deepStrictEqual(resp, {
+            positionals: { file: '-' },
+            flags: {},
+            tail: []
+        });
+    });
+
     it('treats a standalone negative number as a positional', (t: it.TestContext) => {
         const argv = new Argv({
             positionals: 'calc :a :b'
