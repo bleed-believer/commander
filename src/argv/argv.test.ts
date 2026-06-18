@@ -97,6 +97,42 @@ describe('new Argv(...).parse(...)', () => {
         });
     });
 
+    it('throws on extra positionals beyond the template', (t: it.TestContext) => {
+        const argv = new Argv({
+            positionals: 'build'
+        });
+
+        t.assert.throws(() => argv.parse({
+            argv: ['node', 'script', 'build', 'extra']
+        }), /Unexpected positional "extra" at position 1/);
+    });
+
+    it('throws on extra positionals after a fixed capture', (t: it.TestContext) => {
+        const argv = new Argv({
+            positionals: 'run :target'
+        });
+
+        t.assert.throws(() => argv.parse({
+            argv: ['node', 'script', 'run', 'a', 'b']
+        }), /Unexpected positional "b" at position 2/);
+    });
+
+    it('does not throw when a variadic consumes the rest', (t: it.TestContext) => {
+        const argv = new Argv({
+            positionals: 'install :packages*'
+        });
+
+        const resp = argv.parse({
+            argv: ['node', 'script', 'install', 'a', 'b', 'c']
+        });
+
+        t.assert.deepStrictEqual(resp, {
+            positionals: { packages: ['a', 'b', 'c'] },
+            flags: {},
+            tail: []
+        });
+    });
+
     it('throws on an empty number flag value', (t: it.TestContext) => {
         const argv = new Argv({
             positionals: 'run',

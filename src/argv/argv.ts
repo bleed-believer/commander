@@ -30,6 +30,7 @@ export class Argv<P extends string, F extends Record<string, FlagOptions> = Reco
         const tokens = this.#options.positionals.split(' ');
         const result: Record<string, string | string[] | undefined> = {};
         let posIdx = 0;
+        let consumedRest = false;
 
         for (const token of tokens) {
             if (token.startsWith(':')) {
@@ -41,9 +42,11 @@ export class Argv<P extends string, F extends Record<string, FlagOptions> = Reco
                         );
                     }
                     result[token.slice(1, -1)] = vals;
+                    consumedRest = true;
                     break;
                 } else if (token.endsWith('*')) {
                     result[token.slice(1, -1)] = positionals.slice(posIdx);
+                    consumedRest = true;
                     break;
                 } else if (token.endsWith('?')) {
                     result[token.slice(1, -1)] = positionals[posIdx];
@@ -68,6 +71,15 @@ export class Argv<P extends string, F extends Record<string, FlagOptions> = Reco
                 }
                 posIdx++;
             }
+        }
+
+        // Unless a variadic token consumed everything, leftover positionals mean
+        // this command's arity does not match the input. Treat it as a static
+        // mismatch (not the right command) so a router can keep trying siblings.
+        if (!consumedRest && posIdx < positionals.length) {
+            throw new StaticMismatchError(
+                `Unexpected positional "${positionals[posIdx]}" at position ${posIdx}`
+            );
         }
 
         return result;
