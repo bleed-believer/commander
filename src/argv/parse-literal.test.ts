@@ -15,4 +15,9 @@ describe('parseLiteralNames', () => {
     it('token with multiple aliases returns all names', () => {
         deepStrictEqual(parseLiteralNames('install(i,inst)'), ['install', 'i', 'inst']);
     });
+
+    it('drops empty aliases', () => {
+        deepStrictEqual(parseLiteralNames('cmd()'), ['cmd']);
+        deepStrictEqual(parseLiteralNames('cmd(a,,b)'), ['cmd', 'a', 'b']);
+    });
 });
