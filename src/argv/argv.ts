@@ -4,6 +4,7 @@ import type { ParsedArgv } from './interfaces/index.js';
 import { parseLiteralNames } from './parse-literal.js';
 import { camelToKebab } from './camel-to-kebab.js';
 import { isNegativeNumber } from './is-negative-number.js';
+import { parseNumber } from './parse-number.js';
 import { StaticMismatchError } from './static-mismatch-error.js';
 import { PositionalMismatchError } from './positional-mismatch-error.js';
 import { FlagParseError } from './flag-parse-error.js';
@@ -95,7 +96,7 @@ export class Argv<P extends string, F extends Record<string, FlagOptions> = Reco
                 result[name] = values[0] !== 'false';
             } else if (opt.type === 'number') {
                 if (opt.array === true) {
-                    const nums = values.map(Number);
+                    const nums = values.map(parseNumber);
                     const badIdx = nums.findIndex(n => isNaN(n));
                     if (badIdx !== -1) {
                         throw new FlagParseError(
@@ -104,7 +105,7 @@ export class Argv<P extends string, F extends Record<string, FlagOptions> = Reco
                     }
                     result[name] = nums;
                 } else {
-                    const num = Number(values[0]);
+                    const num = parseNumber(values[0]);
                     if (isNaN(num)) {
                         throw new FlagParseError(
                             `Flag "${longKey}" expects a number but got "${values[0]}"`

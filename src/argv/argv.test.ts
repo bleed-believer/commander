@@ -97,6 +97,36 @@ describe('new Argv(...).parse(...)', () => {
         });
     });
 
+    it('throws on an empty number flag value', (t: it.TestContext) => {
+        const argv = new Argv({
+            positionals: 'run',
+            flags: {
+                count: { type: 'number' }
+            }
+        });
+
+        t.assert.throws(() => argv.parse({
+            argv: ['node', 'script', 'run', '--count=']
+        }), /Flag "--count" expects a number but got ""/);
+    });
+
+    it('throws on Infinity and hexadecimal number flag values', (t: it.TestContext) => {
+        const argv = new Argv({
+            positionals: 'run',
+            flags: {
+                count: { type: 'number' }
+            }
+        });
+
+        t.assert.throws(() => argv.parse({
+            argv: ['node', 'script', 'run', '--count=Infinity']
+        }), /expects a number but got "Infinity"/);
+
+        t.assert.throws(() => argv.parse({
+            argv: ['node', 'script', 'run', '--count=0x10']
+        }), /expects a number but got "0x10"/);
+    });
+
     it('captures a negative number as a value flag', (t: it.TestContext) => {
         const argv = new Argv({
             positionals: 'run',
