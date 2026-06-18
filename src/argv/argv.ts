@@ -81,6 +81,11 @@ export class Argv<P extends string, F extends Record<string, FlagOptions> = Reco
             const values = rawFlags[longKey] ?? (shortKey !== undefined ? rawFlags[shortKey] : undefined);
 
             if (values === undefined) {
+                if (opt.required === true) {
+                    throw new FlagParseError(
+                        `Flag "${longKey}" is required`
+                    );
+                }
                 result[name] = undefined;
                 continue;
             }

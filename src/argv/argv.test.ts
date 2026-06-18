@@ -97,6 +97,46 @@ describe('new Argv(...).parse(...)', () => {
         });
     });
 
+    it('throws when a required flag is missing', (t: it.TestContext) => {
+        const argv = new Argv({
+            positionals: 'run :target?',
+            flags: {
+                config: {
+                    type: 'string',
+                    short: 'c',
+                    required: true
+                }
+            }
+        });
+
+        t.assert.throws(() => argv.parse({
+            argv: ['node', 'script', 'run']
+        }), /Flag "--config" is required/);
+    });
+
+    it('does not throw when a required flag is provided', (t: it.TestContext) => {
+        const argv = new Argv({
+            positionals: 'run :target?',
+            flags: {
+                config: {
+                    type: 'string',
+                    short: 'c',
+                    required: true
+                }
+            }
+        });
+
+        const resp = argv.parse({
+            argv: ['node', 'script', 'run', '-c', './tsconfig.json']
+        });
+
+        t.assert.deepStrictEqual(resp, {
+            positionals: { target: undefined },
+            flags: { config: './tsconfig.json' },
+            tail: []
+        });
+    });
+
     it('run ./src/index.ts -c ./tsconfig.json -- serve --port 8080', (t: it.TestContext) => {
         const argv = new Argv({
             positionals: 'run :target',
