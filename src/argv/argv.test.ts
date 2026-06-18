@@ -97,6 +97,44 @@ describe('new Argv(...).parse(...)', () => {
         });
     });
 
+    it('captures a negative number as a value flag', (t: it.TestContext) => {
+        const argv = new Argv({
+            positionals: 'run',
+            flags: {
+                temp: {
+                    type: 'number',
+                    short: 't'
+                }
+            }
+        });
+
+        const resp = argv.parse({
+            argv: ['node', 'script', 'run', '--temp', '-10']
+        });
+
+        t.assert.deepStrictEqual(resp, {
+            positionals: {},
+            flags: { temp: -10 },
+            tail: []
+        });
+    });
+
+    it('treats a standalone negative number as a positional', (t: it.TestContext) => {
+        const argv = new Argv({
+            positionals: 'calc :a :b'
+        });
+
+        const resp = argv.parse({
+            argv: ['node', 'script', 'calc', '-1', '-2.5']
+        });
+
+        t.assert.deepStrictEqual(resp, {
+            positionals: { a: '-1', b: '-2.5' },
+            flags: {},
+            tail: []
+        });
+    });
+
     it('unknown flag does not swallow the following positional', (t: it.TestContext) => {
         const argv = new Argv({
             positionals: 'run :target'

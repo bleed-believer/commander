@@ -3,6 +3,7 @@ import type { ParsedArgv } from './interfaces/index.js';
 
 import { parseLiteralNames } from './parse-literal.js';
 import { camelToKebab } from './camel-to-kebab.js';
+import { isNegativeNumber } from './is-negative-number.js';
 import { StaticMismatchError } from './static-mismatch-error.js';
 import { PositionalMismatchError } from './positional-mismatch-error.js';
 import { FlagParseError } from './flag-parse-error.js';
@@ -148,7 +149,7 @@ export class Argv<P extends string, F extends Record<string, FlagOptions> = Reco
             if (arg === '--') {
                 flags['--'] = args.slice(i + 1);
                 break;
-            } else if (arg.startsWith('-')) {
+            } else if (arg.startsWith('-') && !isNegativeNumber(arg)) {
                 const eqIdx = arg.indexOf('=');
                 if (eqIdx !== -1) {
                     const key = arg.slice(0, eqIdx);
@@ -158,7 +159,7 @@ export class Argv<P extends string, F extends Record<string, FlagOptions> = Reco
                     i++;
                 } else if (valueKeys.has(arg)) {
                     const next = args[i + 1];
-                    if (next !== undefined && !next.startsWith('-')) {
+                    if (next !== undefined && (!next.startsWith('-') || isNegativeNumber(next))) {
                         flags[arg] ??= [];
                         flags[arg].push(next);
                         i += 2;
