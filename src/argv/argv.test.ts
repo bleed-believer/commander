@@ -133,6 +133,32 @@ describe('new Argv(...).parse(...)', () => {
         });
     });
 
+    it('throws when a string flag is given without a value', (t: it.TestContext) => {
+        const argv = new Argv({
+            positionals: 'run',
+            flags: {
+                config: { type: 'string', short: 'c' }
+            }
+        });
+
+        t.assert.throws(() => argv.parse({
+            argv: ['node', 'script', 'run', '--config']
+        }), /Flag "--config" expects a value/);
+    });
+
+    it('throws when a number flag is given without a value', (t: it.TestContext) => {
+        const argv = new Argv({
+            positionals: 'run',
+            flags: {
+                count: { type: 'number' }
+            }
+        });
+
+        t.assert.throws(() => argv.parse({
+            argv: ['node', 'script', 'run', '--count']
+        }), /Flag "--count" expects a value/);
+    });
+
     it('throws on an empty number flag value', (t: it.TestContext) => {
         const argv = new Argv({
             positionals: 'run',

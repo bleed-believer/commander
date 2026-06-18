@@ -105,7 +105,19 @@ export class Argv<P extends string, F extends Record<string, FlagOptions> = Reco
 
             if (opt.type === 'boolean') {
                 result[name] = values[0] !== 'false';
-            } else if (opt.type === 'number') {
+                continue;
+            }
+
+            // Value-taking flags must carry at least one value. Tokenization
+            // leaves an empty array when e.g. `--config` ends the argv with no
+            // following value; reject it consistently for both string and number.
+            if (values.length === 0) {
+                throw new FlagParseError(
+                    `Flag "${longKey}" expects a value`
+                );
+            }
+
+            if (opt.type === 'number') {
                 if (opt.array === true) {
                     const nums = values.map(parseNumber);
                     const badIdx = nums.findIndex(n => isNaN(n));
