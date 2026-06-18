@@ -26,7 +26,11 @@ export class Argv<P extends string, F extends Record<string, FlagOptions> = Reco
     }
 
     #parsePositionals(positionals: string[]): Record<string, string | string[] | undefined> {
-        const tokens = this.#options.positionals.split(' ');
+        // Empty tokens (from an empty template, or leading/trailing/double
+        // spaces) carry no matching intent, so drop them. An empty template
+        // then yields no tokens and matches an argv with no positionals,
+        // which is what a flags-only or default command needs.
+        const tokens = this.#options.positionals.split(' ').filter(token => token.length > 0);
         const result: Record<string, string | string[] | undefined> = {};
         let posIdx = 0;
         let consumedRest = false;

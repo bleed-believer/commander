@@ -133,6 +133,35 @@ describe('new Argv(...).parse(...)', () => {
         });
     });
 
+    it('matches a flags-only command with an empty positionals template', (t: it.TestContext) => {
+        const argv = new Argv({
+            positionals: '',
+            flags: {
+                verbose: { type: 'boolean', short: 'v' }
+            }
+        });
+
+        const resp = argv.parse({
+            argv: ['node', 'script', '--verbose']
+        });
+
+        t.assert.deepStrictEqual(resp, {
+            positionals: {},
+            flags: { verbose: true },
+            tail: []
+        });
+    });
+
+    it('throws on positionals given to an empty template', (t: it.TestContext) => {
+        const argv = new Argv({
+            positionals: ''
+        });
+
+        t.assert.throws(() => argv.parse({
+            argv: ['node', 'script', 'extra']
+        }), /Unexpected positional "extra" at position 0/);
+    });
+
     it('boolean flag with array:true still yields a single boolean', (t: it.TestContext) => {
         const argv = new Argv({
             positionals: 'run',
