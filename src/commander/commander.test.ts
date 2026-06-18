@@ -201,6 +201,52 @@ describe('Commander', () => {
                 { path: [ 'run' ], description: undefined, flags: [] }
             ]);
         });
+
+        it('flags-only command produces no empty path segment', (t: it.TestContext) => {
+            const app = new Commander([
+                new Command({
+                    description: 'Build everything',
+                    positionals: '',
+                    flags: {
+                        dryRun: { type: 'boolean', description: 'Do not write output' }
+                    },
+                    callback: _ => noop
+                })
+            ]);
+
+            t.assert.deepStrictEqual(app.docs(), [
+                {
+                    path: [],
+                    description: 'Build everything',
+                    flags: [
+                        { name: 'dry-run', type: 'boolean', required: false, description: 'Do not write output' }
+                    ]
+                }
+            ]);
+        });
+
+        it('multi-word flag name is reported in kebab-case', (t: it.TestContext) => {
+            const app = new Commander([
+                new Command({
+                    description: 'Serve the app',
+                    positionals: 'serve',
+                    flags: {
+                        maxConnections: { type: 'number', description: 'Connection cap' }
+                    },
+                    callback: _ => noop
+                })
+            ]);
+
+            t.assert.deepStrictEqual(app.docs(), [
+                {
+                    path: [ 'serve' ],
+                    description: 'Serve the app',
+                    flags: [
+                        { name: 'max-connections', type: 'number', required: false, description: 'Connection cap' }
+                    ]
+                }
+            ]);
+        });
     });
 
     describe('run()', () => {

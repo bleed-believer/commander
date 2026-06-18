@@ -1,6 +1,6 @@
 import type { CommandContext, CommandDoc, CommandOptions, CommandResult, FlagDescriptor } from './interfaces/index.js';
 
-import { Argv, StaticMismatchError, PositionalMismatchError } from '@/argv/index.js';
+import { Argv, StaticMismatchError, PositionalMismatchError, camelToKebab } from '@/argv/index.js';
 
 /**
  * Represents a single CLI command with a typed positionals template,
@@ -54,9 +54,14 @@ export class Command<
     }
 
     docs(prefix: string[] = []): CommandDoc[] {
-        const tokens = this.#options.positionals.split(' ');
+        // Drop empty tokens the same way the parser does, so a flags-only or
+        // default command (`positionals: ''`) does not emit a stray empty path
+        // segment. The flag name is reported in the kebab-case form the parser
+        // actually accepts on the CLI (`dryRun` → `dry-run`), not the raw
+        // schema key, so help output matches what users must type.
+        const tokens = this.#options.positionals.split(' ').filter(token => token.length > 0);
         const flags = Object.entries(this.#options.flags ?? {}).map(([name, descriptor]) => ({
-            name,
+            name: camelToKebab(name),
             type: descriptor.type,
             required: descriptor.required ?? false,
             description: descriptor.description,
