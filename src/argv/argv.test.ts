@@ -133,6 +133,25 @@ describe('new Argv(...).parse(...)', () => {
         });
     });
 
+    it('boolean flag with array:true still yields a single boolean', (t: it.TestContext) => {
+        const argv = new Argv({
+            positionals: 'run',
+            flags: {
+                verbose: { type: 'boolean', array: true }
+            }
+        });
+
+        const resp = argv.parse({
+            argv: ['node', 'script', 'run', '--verbose']
+        });
+
+        t.assert.deepStrictEqual(resp, {
+            positionals: {},
+            flags: { verbose: true },
+            tail: []
+        });
+    });
+
     it('throws when a string flag is given without a value', (t: it.TestContext) => {
         const argv = new Argv({
             positionals: 'run',

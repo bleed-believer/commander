@@ -17,10 +17,19 @@ type FlagValue<T extends 'number' | 'string' | 'boolean'> =
     T extends 'number' ? number :
     boolean;
 
+// Boolean flags are always a single boolean at runtime (`array` is ignored),
+// so the type must not widen them to an array regardless of `array`.
+type FlagScalarOrArray<F extends FlagOptions> =
+    F['type'] extends 'boolean'
+        ? boolean
+        : F['array'] extends true
+            ? Array<FlagValue<F['type']>>
+            : FlagValue<F['type']>;
+
 type FlagResult<F extends FlagOptions> =
     F['required'] extends true
-        ? F['array'] extends true ? Array<FlagValue<F['type']>> : FlagValue<F['type']>
-        : F['array'] extends true ? Array<FlagValue<F['type']>> | undefined : FlagValue<F['type']> | undefined;
+        ? FlagScalarOrArray<F>
+        : FlagScalarOrArray<F> | undefined;
 
 type FlagsResult<F extends Record<string, FlagOptions>> = {
     [K in keyof F]: FlagResult<F[K]>;
